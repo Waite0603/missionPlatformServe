@@ -9,6 +9,7 @@ from django.urls import re_path
 from . import views as v
 
 urlpatterns = [
-    re_path(r'^register/?$', v.register, name='register'),
-    re_path(r'^login/?$', v.login, name='login'),
+  re_path(r'^register/?$', v.register, name='register'),
+  re_path(r'^login/?$', v.login, name='login'),
+  re_path(r'^logout/?$', v.logout, name='logout')
 ]

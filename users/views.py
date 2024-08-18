@@ -1,8 +1,11 @@
-import json
-
-from missionPlatform.decorators import post_only
+from missionPlatform.decorators import post_only, get_only, login_required
 from missionPlatform.utils.response import ResponseInfo
-from missionPlatform.handler import ResponseInfo
+from django.contrib.auth.hashers import check_password
+from django.utils import timezone
+
+from missionPlatform.utils.token import create_jwt_pair_for_user
+from missionPlatform.utils.tools import model_to_dict
+from .models import UserProfileModel
 
 
 @post_only
@@ -23,33 +26,38 @@ def register(request):
   return ResponseInfo.success('注册成功')
 
 
+@post_only
 def login(request):
   """
   用户登录
   :param request:
   :return:
   """
-  # 检查 Content-Type 是否为 application/json
-  content_type = request.META.get('CONTENT_TYPE', '')
-  if content_type != 'application/json':
-    return ResponseInfo.fail(400, '请求头错误')
-  if request.method == 'POST':
-    try:
-      data = json.loads(request.body.decode('utf-8'))  # 解码为 UTF-8 字符串
-    except json.JSONDecodeError:
-      return ResponseInfo.fail(400, '参数错误')
+  username = request.POST.get('username')
+  password = request.POST.get('password')
+  # 2. 参数校验
+  if not all([username, password]):
+    return ResponseInfo.fail(400, '参数不全')
+  # 3. 业务处理
+  # 请求数据库，校验用户名和密码
+  user_data = UserProfileModel.objects.filter(username=username).first()
+  if not user_data or not check_password(password, user_data.password):
+    return ResponseInfo.fail(401, '用户名或密码错误')
 
-    print(data)
+  # 查询结果转换为字典
+  token = create_jwt_pair_for_user(user_data)
+  user_data = model_to_dict(user_data)
 
-    # 2. 参数校验
-    username = data.get('username')
-    password = data.get('password')
+  # 删除密码
+  del user_data['password']
+  user_data['token'] = token
 
-    if not all([username, password]):
-      return ResponseInfo.fail(400, '参数不全')
+  # 更新登录时间
+  UserProfileModel.objects.filter(username=username).update(last_login=timezone.now())
 
-    # print
-    print(username, password)
-    return ResponseInfo.success('登录成功')
-  else:
-    return ResponseInfo.fail(405, '请求方式错误')
+  return ResponseInfo.success('登录成功', data=user_data)
+
+
+@login_required
+def logout(request):
+  return ResponseInfo.success('登出成功')
