@@ -24,27 +24,15 @@ def create_jwt_pair_for_user(user: User):
 
 # 刷新 token
 def refresh_jwt_token(token: str):
-  try:
-    refresh = RefreshToken(token)
-    access = str(refresh.access_token)
-    return access
-  except Exception as e:
-    # Log the exception if needed
-    # logger.error(f"Token refresh failed: {e}")
-    return None
+  refresh = RefreshToken(token)
+  access = str(refresh.access_token)
+  return access
 
 
 # 校验 token
 def verify_jwt_token(token: str, refresh_token: str):
   try:
-    data = JWTAuthentication().get_validated_token(token)
-    user = JWTAuthentication().get_user(data)
-    password = JWTAuthentication().get_user(data)
-    print(user)
-    print(password)
-    print(data)
-
-    print(refresh_jwt_token(refresh_token))
+    JWTAuthentication().get_validated_token(token)
 
     return True
   # 如果 token 过期
@@ -52,3 +40,19 @@ def verify_jwt_token(token: str, refresh_token: str):
     # Log the exception if needed
     # logger.error(f"Token verification failed: {e}")
     return False
+
+
+# 获取用户信息
+def get_user_info(request):
+  token = request.headers.get('Authorization')
+  print(token)
+  if not token:
+    return None
+  try:
+    data = JWTAuthentication().get_validated_token(token)
+    user = JWTAuthentication().get_user(data)
+    return user
+  except Exception as e:
+    # Log the exception if needed
+    # logger.error(f"Token verification failed: {e}")
+    return None

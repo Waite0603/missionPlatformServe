@@ -11,5 +11,6 @@ from . import views as v
 urlpatterns = [
   re_path(r'^register/?$', v.register, name='register'),
   re_path(r'^login/?$', v.login, name='login'),
-  re_path(r'^logout/?$', v.logout, name='logout')
+  re_path(r'^logout/?$', v.logout, name='logout'),
+  re_path(r'^captcha/?$', v.get_verify_code, name='get_verify_code'),
 ]
