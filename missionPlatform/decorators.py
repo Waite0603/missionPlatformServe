@@ -41,10 +41,10 @@ def login_required(view_func):
     # get refresh token
     refresh_token = request.headers.get('Refresh')
     if not auth_header:
-      return ResponseInfo.fail(status.HTTP_401_UNAUTHORIZED, '请先登录')
+      return ResponseInfo.fail(status.HTTP_403_FORBIDDEN, '请先登录')
 
     if not verify_jwt_token(auth_header, refresh_token):
-      return ResponseInfo.fail(status.HTTP_401_UNAUTHORIZED, '登录过期, 请重新登录')
+      return ResponseInfo.fail(status.HTTP_403_FORBIDDEN, '登录过期, 请重新登录')
 
     return view_func(request, *args, **kwargs)
 
