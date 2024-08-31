@@ -17,5 +17,5 @@ urlpatterns = [
   re_path(r'^get_list/?$', v.get_article_list, name='get_article_list'),
   re_path(r'^update/?$', v.update_article, name='update_article'),
   re_path(r'^delete/?$', v.delete_article, name='delete_article'),
-
+  re_path(r'^recommend/?$', v.recommend_article, name='recommend_article')
 ]

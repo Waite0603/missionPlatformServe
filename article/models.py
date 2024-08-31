@@ -10,7 +10,7 @@ class Article(models.Model):
   content = models.TextField()
   # 封面图片
   cover = models.CharField(max_length=255, default='cover_default.jpg')
-  # 作者, 外键 User
+  # 作者, 外键 User, 返回作者名字
   author = models.ForeignKey('users.UserProfileModel', on_delete=models.CASCADE)
   # 状态, 0: 正常 1: 删除
   status = models.IntegerField(default=1)

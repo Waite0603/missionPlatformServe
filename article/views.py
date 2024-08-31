@@ -42,7 +42,11 @@ def add_article(request):
     author=author
   )
 
-  return ResponseInfo.success('新增文章成功', model_to_dict(article))
+  # 返回作者名字
+  article_dict = model_to_dict(article)
+  article_dict['author'] = article.author.username
+
+  return ResponseInfo.success('新增文章成功', article_dict)
 
 
 # 获取单篇文章
@@ -58,7 +62,11 @@ def get_article(request):
   if not article:
     return ResponseInfo.fail(404, '文章不存在')
 
-  return ResponseInfo.success('获取文章成功', model_to_dict(article))
+  # 返回作者名字
+  article_dict = model_to_dict(article)
+  article_dict['author'] = article.author.username
+
+  return ResponseInfo.success('获取文章成功', article_dict)
 
 
 # 修改文章
@@ -100,14 +108,17 @@ def update_article(request):
 
   article.save()
 
-  return ResponseInfo.success('修改文章成功', model_to_dict(article))
+  # 返回作者名字
+  article_dict = model_to_dict(article)
+  article_dict['author'] = article.author.username
+  article_dict['author_avatar'] = article.author.avatar
+
+  return ResponseInfo.success('修改文章成功', article_dict)
 
 
 # 获取文章列表
 @get_only
 def get_article_list(request):
-  user_data = get_user_info(request)
-
   # 获取页码, 默认第一页
   page = request.GET.get('page', 1)
 
@@ -115,7 +126,7 @@ def get_article_list(request):
   page_size = request.GET.get('pageSize', 10)
 
   # 获取文章列表
-  article_list = Article.objects.filter(author=user_data).order_by('-create_time')
+  article_list = Article.objects.filter(status=1).order_by('-create_time')
 
   # 分页
   paginator = Paginator(article_list, page_size)
@@ -124,9 +135,20 @@ def get_article_list(request):
   page_data = paginator.page(page)
 
   # 格式化输出
-  data = [model_to_dict(article) for article in page_data]
+  data = []
+  for article in page_data:
+    article_dict = model_to_dict(article)
+    article_dict['author'] = article.author.username
+    data.append(article_dict)
 
-  return ResponseInfo.success('获取文章列表成功', data)
+  res_dict = {
+    'total': paginator.count,
+    'page': page,
+    'pageSize': page_size,
+    'data': data
+  }
+
+  return ResponseInfo.success('获取文章列表成功', res_dict)
 
 
 # 删除文章
@@ -150,3 +172,23 @@ def delete_article(request):
     return ResponseInfo.fail(404, '文章不存在')
 
   return ResponseInfo.success('删除文章成功')
+
+
+# 推荐文章
+@get_only
+def recommend_article(request):
+  article_id = request.GET.get('id')
+
+  if not article_id:
+    return ResponseInfo.fail(400, '参数不全')
+  article_list = Article.objects.all().order_by('-create_time')[:5]
+
+  data = []
+  for article in article_list:
+    if article.id == int(article_id):
+      continue
+    article_dict = model_to_dict(article)
+    article_dict['author'] = article.author.username
+    data.append(article_dict)
+
+  return ResponseInfo.success('获取推荐文章成功', data[:3])

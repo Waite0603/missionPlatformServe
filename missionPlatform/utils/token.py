@@ -45,7 +45,6 @@ def verify_jwt_token(token: str, refresh_token: str):
 # 获取用户信息
 def get_user_info(request):
   token = request.headers.get('Authorization')
-  print(token)
   if not token:
     return None
   try:
