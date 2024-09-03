@@ -133,4 +133,5 @@ dmypy.json
 .local_settings.py
 .db.sqlite3
 
-upload/
+/upload/avatar/
+/upload/video/
