@@ -11,6 +11,11 @@ from . import views as v
 urlpatterns = [
   re_path(r'^register/?$', v.register, name='register'),
   re_path(r'^login/?$', v.login, name='login'),
+  re_path(r'^userinfo/?$', v.user_info, name='get_user_info'),
+  re_path(r'^update/?$', v.update_user_info, name='update_user_info'),
   re_path(r'^logout/?$', v.logout, name='logout'),
   re_path(r'^captcha/?$', v.get_verify_code, name='get_verify_code'),
+  re_path(r'^contact/?$', v.contact_us, name='contact_us'),
+  re_path(r'^avatar/upload/?$', v.upload_avatar, name='upload_avatar'),
+  re_path(r'^avatar/preview/?$', v.preview_avatar, name='preview_avatar'),
 ]

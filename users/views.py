@@ -1,4 +1,9 @@
+import hashlib
 import json
+import os
+import time
+
+from django.http import FileResponse
 
 from missionPlatform.decorators import post_only, get_only, login_required
 from django.db.models import Q
@@ -7,9 +12,9 @@ from missionPlatform.utils.response import ResponseInfo
 from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 
-from missionPlatform.utils.token import create_jwt_pair_for_user
+from missionPlatform.utils.token import create_jwt_pair_for_user, get_user_info
 from missionPlatform.utils.tools import model_to_dict
-from .models import UserProfileModel
+from .models import UserProfileModel, Contact
 import re
 
 
@@ -116,3 +121,145 @@ def logout(request):
 @get_only
 def get_verify_code(request):
   return ResponseInfo.success('123456')
+
+
+# 获取用户信息
+@get_only
+@login_required
+def user_info(request):
+  user_data = get_user_info(request)
+
+  user_data = model_to_dict(user_data)
+  del user_data['password']
+
+  return ResponseInfo.success('获取成功', user_data)
+
+
+# 更新用户信息
+@post_only
+@login_required
+def update_user_info(request):
+  user_data = get_user_info(request)
+
+  try:
+    data = json.loads(request.body)
+  except json.JSONDecodeError:
+    return ResponseInfo.fail(400, 'Invalid JSON')
+
+  email = data.get('email')
+  phone = data.get('phone')
+  password = data.get('password')
+  first_name = data.get('firstName')
+  last_name = data.get('lastName')
+  birthday = data.get('birthday')
+  address = data.get('address')
+  sex = data.get('sex')
+
+  update_fields = {}
+  if email:
+    update_fields['email'] = email
+  if phone:
+    update_fields['phone'] = phone
+  if password:
+    update_fields['password'] = make_password(password)
+  if first_name:
+    update_fields['first_name'] = first_name
+  if last_name:
+    update_fields['last_name'] = last_name
+  if birthday:
+    update_fields['birthday'] = birthday
+  if address:
+    update_fields['address'] = address
+  if sex:
+    update_fields['sex'] = sex
+
+  # Update fields in a single call
+  UserProfileModel.objects.filter(id=user_data.id).update(**update_fields)
+
+  user_data = UserProfileModel.objects.filter(id=user_data.id).first()
+  user_data = model_to_dict(user_data)
+
+  del user_data['password']
+
+  return ResponseInfo.success('更新成功', user_data)
+
+
+# 上传头像
+@post_only
+@login_required
+def upload_avatar(request):
+  user_data = get_user_info(request)
+
+  file = request.FILES.get('file')
+
+  if not file:
+    return ResponseInfo.fail(400, '文件不能为空')
+
+  # 重命名文件, md5(用户名+时间戳)
+  file_name = file.name
+  file_name = file_name.split('.')
+  file_name = hashlib.md5((user_data.username + str(time.time())).encode('utf-8')).hexdigest() + '.' + file_name[-1]
+
+  # 保存文件到 ./upload/avatar
+  upload_dir = 'upload/avatar'
+  if not os.path.exists(upload_dir):
+    os.makedirs(upload_dir)
+
+  try:
+    with open(f'{upload_dir}/{file_name}', 'wb') as f:
+      for chunk in file.chunks():
+        f.write(chunk)
+  except Exception as e:
+    print(e)
+    return ResponseInfo.fail(500, '上传失败')
+
+  # 更新用户头像
+  UserProfileModel.objects.filter(id=user_data.id).update(avatar=f'{file_name}')
+
+  user_data = UserProfileModel.objects.filter(id=user_data.id).first()
+
+  user_data = model_to_dict(user_data)
+
+  del user_data['password']
+
+  return ResponseInfo.success('上传成功', user_data)
+
+
+# 预览头像
+@get_only
+def preview_avatar(request):
+  avatar_url = request.GET.get('avatar')
+  if not avatar_url:
+    return ResponseInfo.fail(400, '参数不全')
+
+  avatar_dir = 'upload/avatar'
+  try:
+    return FileResponse(open(f'{avatar_dir}/{avatar_url}', 'rb'))
+  except FileNotFoundError:
+    return ResponseInfo.fail(404, '文件不存在')
+
+
+# 联系我们
+@post_only
+def contact_us(request):
+  try:
+    data = json.loads(request.body)
+  except json.JSONDecodeError:
+    return ResponseInfo.fail(400, 'Invalid JSON')
+
+  name = data.get('name')
+  email = data.get('email')
+  message = data.get('message')
+
+  # 2. 参数校验
+  if not all([name, email, message]):
+    return ResponseInfo.fail(400, '参数不全')
+
+  # 校验邮箱格式
+  if not re.match(r'^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$', email):
+    return ResponseInfo.fail(400, '邮箱格式错误')
+
+  # 保存数据
+  Contact.objects.create(name=name, email=email, message=message)
+
+  return ResponseInfo.success('提交成功, 我们会尽快联系您')

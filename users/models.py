@@ -25,3 +25,19 @@ class UserProfileModel(AbstractUser):
   def __str__(self):
     # 定义模型对象的显示信息
     return self.username
+
+
+# 联系我们表单
+class Contact(models.Model):
+  name = models.CharField(max_length=50, verbose_name='姓名')
+  email = models.EmailField(max_length=50, verbose_name='邮箱')
+  message = models.TextField(verbose_name='留言')
+  create_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+
+  class Meta:
+    db_table = 'contact'
+    verbose_name = '联系我们'
+    verbose_name_plural = verbose_name
+
+  def __str__(self):
+    return self.name
