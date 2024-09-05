@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from missionPlatform.utils.token import create_jwt_pair_for_user, get_user_info
 from missionPlatform.utils.tools import model_to_dict
-from .models import UserProfileModel, Contact
+from .models import UserProfileModel, Contact, VipCode
 import re
 
 
@@ -263,3 +263,112 @@ def contact_us(request):
   Contact.objects.create(name=name, email=email, message=message)
 
   return ResponseInfo.success('提交成功, 我们会尽快联系您')
+
+
+# 开通会员
+@post_only
+@login_required
+def open_vip(request):
+  user_data = get_user_info(request)
+
+  try:
+    data = json.loads(request.body)
+  except json.JSONDecodeError:
+    return ResponseInfo.fail(400, 'Invalid JSON')
+
+  vip_code = data.get('vipCode')
+
+  if not vip_code:
+    return ResponseInfo.fail(400, '参数不全')
+
+  # 请求数据库，校验激活码是否存在
+  vip_data = VipCode.objects.filter(code=vip_code, status=1).first()
+
+  if not vip_data:
+    return ResponseInfo.fail(400, '激活码无效')
+
+  # 更新激活码状态
+  VipCode.objects.filter(code=vip_code).update(status=0, active_time=timezone.now(), active_user=user_data)
+
+  # 更新用户状态, 1- 1年会员, 10-永久会员
+  if vip_data.type == 1:
+    UserProfileModel.objects.filter(id=user_data.id).update(status=1, vip_start_time=timezone.now(),
+                                                            vip_end_time=timezone.now() + timezone.timedelta(days=365))
+  elif vip_data.type == 10:
+    UserProfileModel.objects.filter(id=user_data.id).update(status=10, vip_start_time=timezone.now(),
+                                                            vip_end_time=None)
+
+  user_data = UserProfileModel.objects.filter(id=user_data.id).first()
+
+  user_data = model_to_dict(user_data)
+
+  del user_data['password']
+
+  return ResponseInfo.success('开通成功', user_data)
+
+
+# 创建会员激活码
+@post_only
+@login_required
+def create_vip_code(request):
+  user_data = get_user_info(request)
+
+  try:
+    data = json.loads(request.body)
+    vip_type = data.get('type')
+  except json.JSONDecodeError:
+    return ResponseInfo.fail(400, 'Invalid JSON')
+
+  # 随机生成激活码
+  code = hashlib.md5(str(time.time()).encode('utf-8')).hexdigest()[:16]
+
+  user_data = UserProfileModel.objects.filter(id=user_data.id).first()
+
+  if user_data.status != 100:
+    return ResponseInfo.fail(400, '权限不足')
+
+  # 校验是否已存在
+  while VipCode.objects.filter(code=code).first():
+    code = hashlib.md5(str(time.time()).encode('utf-8')).hexdigest()[:16]
+
+  # 保存数据
+  VipCode.objects.create(code=code, type=vip_type)
+
+  return ResponseInfo.success('创建成功', {'code': code})
+
+
+# 直接开通会员
+@post_only
+@login_required
+def direct_open_vip(request):
+  user_data = get_user_info(request)
+
+  try:
+    data = json.loads(request.body)
+    vip_type = data.get('vip_type')
+    print(data)
+  except json.JSONDecodeError:
+    return ResponseInfo.fail(400, 'Invalid JSON')
+
+  # 更新用户状态, 5- 1年会员, 10-永久会员
+  user_data = UserProfileModel.objects.filter(id=user_data.id).first()
+  if vip_type == 5:
+    # 查看用户是否已经是会员
+    if user_data.status == 5:
+      UserProfileModel.objects.filter(id=user_data.id).update(
+        vip_end_time=user_data.vip_end_time + timezone.timedelta(days=365))
+    else:
+      UserProfileModel.objects.filter(id=user_data.id).update(status=vip_type, vip_start_time=timezone.now(),
+                                                              vip_end_time=timezone.now() + timezone.timedelta(
+                                                                days=365))
+  elif vip_type == 10:
+    UserProfileModel.objects.filter(id=user_data.id).update(status=vip_type, vip_start_time=timezone.now(),
+                                                            vip_end_time=None)
+
+  user_data = UserProfileModel.objects.filter(id=user_data.id).first()
+
+  user_data = model_to_dict(user_data)
+
+  del user_data['password']
+
+  return ResponseInfo.success('开通成功', user_data)

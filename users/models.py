@@ -16,6 +16,12 @@ class UserProfileModel(AbstractUser):
   # 头像
   avatar = models.CharField(max_length=100, default='default.jpg', verbose_name='头像')
   address = models.CharField(max_length=100, default='', verbose_name='地址')
+  # 状态
+  status = models.IntegerField(default=1, verbose_name='状态')
+  # 会员开通时间
+  vip_start_time = models.DateTimeField(null=True, blank=True, verbose_name='会员开通时间')
+  # 会员结束时间
+  vip_end_time = models.DateTimeField(null=True, blank=True, verbose_name='会员结束时间')
 
   class Meta(object):
     db_table = 'user_profile'
@@ -41,3 +47,24 @@ class Contact(models.Model):
 
   def __str__(self):
     return self.name
+
+
+# 会员激活码
+class VipCode(models.Model):
+  code = models.CharField(max_length=50, verbose_name='激活码')
+  type = models.IntegerField(default=1, verbose_name='类型')
+  status = models.IntegerField(default=1, verbose_name='状态')
+  create_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+  # 激活时间
+  active_time = models.DateTimeField(null=True, blank=True, verbose_name='激活时间')
+  # 激活用户
+  active_user = models.ForeignKey(UserProfileModel, on_delete=models.CASCADE, null=True, blank=True,
+                                  verbose_name='激活用户')
+
+  class Meta:
+    db_table = 'vip_code'
+    verbose_name = '会员激活码'
+    verbose_name_plural = verbose_name
+
+  def __str__(self):
+    return self.code

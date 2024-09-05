@@ -38,7 +38,8 @@ INSTALLED_APPS = [
   "users.apps.UsersConfig",
   'rest_framework',
   "video.apps.VideoConfig",
-  "article.apps.ArticleConfig"
+  "article.apps.ArticleConfig",
+  "course.apps.CourseConfig"
 ]
 
 MIDDLEWARE = [

@@ -18,4 +18,7 @@ urlpatterns = [
   re_path(r'^contact/?$', v.contact_us, name='contact_us'),
   re_path(r'^avatar/upload/?$', v.upload_avatar, name='upload_avatar'),
   re_path(r'^avatar/preview/?$', v.preview_avatar, name='preview_avatar'),
+  re_path(r'^vip/open/?$', v.open_vip, name='open_vip'),
+  re_path(r'^vip/direct/open/?$', v.direct_open_vip, name='direct_open_vip'),
+  re_path(r'^vip/code/create/?$', v.create_vip_code, name='create_vip_code'),
 ]
