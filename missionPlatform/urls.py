@@ -11,6 +11,7 @@ urlpatterns = [
   path('auth/', include('users.urls'), name='auth'),  # 用户模块
   path('video/', include('video.urls'), name='video'),  # 视频模块
   path('article/', include('article.urls'), name='article'),  # 文章模块
+  path('course/', include('course.urls'), name='course'),  # 课程模块
   # JTW认证接口
   path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
   # 刷新JWT有效期接口
