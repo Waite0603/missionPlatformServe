@@ -11,7 +11,7 @@ class Course(models.Model):
   create_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
   update_time = models.DateTimeField(auto_now=True, verbose_name='更新时间')
   category = models.ForeignKey('CourseCategory', on_delete=models.CASCADE, verbose_name='所属分类')
-  # 状态, 0: 被清理, 1. 正常, 2. 未被使用
+  # 状态, 0: 被清理, 1. 正常
   status = models.IntegerField(default=1)
   # 创建者
   author = models.ForeignKey('users.UserProfileModel', on_delete=models.CASCADE)

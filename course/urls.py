@@ -9,6 +9,7 @@
 """
 from django.urls import re_path
 from .views import course_category as category
+from .views import course_chapter as chapter
 from .views import course
 
 urlpatterns = [
@@ -19,6 +20,15 @@ urlpatterns = [
 
   re_path(r'^create/?$', course.create_course, name='create_course'),
   re_path(r'^list/?$', course.get_course_list, name='get_course_list'),
+  re_path(r'^update/?$', course.update_course, name='update_course'),
+  re_path(r'^delete/?$', course.delete_course, name='delete_course'),
+  re_path(r'^upload/cover/?$', course.upload_cover, name='upload_cover'),
+  re_path(r'^preview/cover/?$', course.preview_cover, name='get_cover'),
+
+  re_path(r'^chapter/create/?$', chapter.create_chapter, name='create_chapter'),
+  re_path(r'^chapter/list/?$', chapter.get_chapter_list, name='get_chapter_list'),
+  re_path(r'^chapter/update/?$', chapter.update_chapter, name='update_chapter'),
+  re_path(r'^chapter/delete/?$', chapter.delete_chapter, name='delete_chapter'),
 
 
 ]
