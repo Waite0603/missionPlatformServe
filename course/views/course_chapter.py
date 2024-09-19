@@ -3,7 +3,7 @@
     @project: missionPlatform
     @Author：Waite0603
     @file： course_chapter.py
-    @date：2024/9/7 下午8:47
+     @date：2024/9/7 下午8:47
     
     TODO:
 """
@@ -82,7 +82,18 @@ def get_chapter_list(request):
     model_to_dict(chapter) for chapter in chapter_list
   ]
 
-  return ResponseInfo.success('获取成功', data=chapter_list)
+  # 获取课程详情
+  course = Course.objects.filter(id=course_id, status=1).values()
+  course = model_to_dict(course[0])
+
+  # 返回分类名称
+  category = CourseCategory.objects.filter(id=course['category_id']).values()
+
+  course['category'] = category[0]['name']
+
+  return ResponseInfo.success('获取成功', data={'course': course, 'chapter': chapter_list})
+
+  # return ResponseInfo.success('获取成功', data=chapter_list)
 
 
 @post_only

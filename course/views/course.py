@@ -193,3 +193,42 @@ def preview_cover(request):
   except Exception as e:
     print(e)
     return ResponseInfo.fail(404, '文件不存在')
+
+
+# 推荐课程
+@get_only
+def recommend_course(request):
+  id = request.GET.get('id')
+
+  if not id:
+    return ResponseInfo.fail(400, '参数不全')
+
+  course_data = Course.objects.filter(id=id).first()
+
+  if not course_data:
+    return ResponseInfo.fail(404, '课程不存在')
+
+  # 获取分类
+  category = course_data.category
+
+  # 获取推荐课程, 前四条
+  recommend_course_list = Course.objects.filter(category=category, status=1).exclude(id=id).order_by('-create_time')[:4]
+
+  recommend_course_list = [
+    model_to_dict(course) for course in recommend_course_list
+  ]
+
+  len_recommend_course_list = len(recommend_course_list)
+
+  if len_recommend_course_list < 3:
+    # 如果推荐课程不足3条, 补充其他课程
+    other_course_list = Course.objects.filter(status=1).exclude(id=id).exclude(category=category).order_by(
+      '-create_time')[:3 - len_recommend_course_list]
+
+    other_course_list = [
+      model_to_dict(course) for course in other_course_list
+    ]
+
+    recommend_course_list.extend(other_course_list)
+
+  return ResponseInfo.success('获取成功', data=recommend_course_list)

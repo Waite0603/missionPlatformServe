@@ -6,7 +6,7 @@ from django.db import models
 class Course(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=50, verbose_name='课程名称')
-  desc = models.CharField(max_length=200, verbose_name='课程描述')
+  desc = models.TextField(verbose_name='课程描述')
   cover = models.CharField(max_length=100, verbose_name='封面')
   create_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
   update_time = models.DateTimeField(auto_now=True, verbose_name='更新时间')
@@ -50,7 +50,7 @@ class Chapter(models.Model):
 class CourseCategory(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=50, verbose_name='分类名称')
-  desc = models.CharField(max_length=200, verbose_name='分类描述')
+  desc = models.TextField(verbose_name='分类描述')
   create_time = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
   update_time = models.DateTimeField(auto_now=True, verbose_name='更新时间')
 
