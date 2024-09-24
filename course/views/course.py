@@ -66,7 +66,17 @@ def create_course(request):
 
 @get_only
 def get_course_list(request):
-  course_list = Course.objects.filter(status=1).order_by('-create_time').values()
+  category = request.GET.get('category')
+
+  if category:
+    course_list = Course.objects.filter(category=category, status__gt=0).order_by('-create_time').values()
+  else:
+    course_list = Course.objects.filter(status__gt=0).order_by('-create_time').values()
+
+  # 添加分类名称
+  for course in course_list:
+    category_name = CourseCategory.objects.filter(id=course['category_id']).values()
+    course['category'] = category_name[0]['name']
 
   course_list = [
     model_to_dict(course) for course in course_list
@@ -180,9 +190,7 @@ def upload_cover(request):
 
 # 预览封面
 @get_only
-def preview_cover(request):
-  cover_url = request.GET.get('cover')
-
+def preview_cover(request, cover_url):
   if not cover_url:
     return ResponseInfo.fail(400, '参数不全')
 
@@ -211,24 +219,72 @@ def recommend_course(request):
   # 获取分类
   category = course_data.category
 
-  # 获取推荐课程, 前四条
-  recommend_course_list = Course.objects.filter(category=category, status=1).exclude(id=id).order_by('-create_time')[:4]
+  # 获取推荐课程, 前四条, status!=0
+  recommend_course_list = Course.objects.filter(category=category).exclude(id=id, status=0).order_by('-create_time')[:4]
 
   recommend_course_list = [
     model_to_dict(course) for course in recommend_course_list
   ]
 
+  # 添加分类名称
+  for course in recommend_course_list:
+    category_name = CourseCategory.objects.filter(id=course['category_id']).values()
+    course['category'] = category_name[0]['name']
+
   len_recommend_course_list = len(recommend_course_list)
 
   if len_recommend_course_list < 3:
     # 如果推荐课程不足3条, 补充其他课程
-    other_course_list = Course.objects.filter(status=1).exclude(id=id).exclude(category=category).order_by(
+    other_course_list = Course.objects.filter(status__gt=0).exclude(id=id).exclude(category=category).order_by(
       '-create_time')[:3 - len_recommend_course_list]
 
     other_course_list = [
       model_to_dict(course) for course in other_course_list
     ]
 
+    for course in other_course_list:
+      category_name = CourseCategory.objects.filter(id=course['category_id']).values()
+      course['category'] = category_name[0]['name']
+
     recommend_course_list.extend(other_course_list)
 
   return ResponseInfo.success('获取成功', data=recommend_course_list)
+
+
+# 首页推荐课程
+@get_only
+def index_recommend_course(request):
+  course_list = Course.objects.filter(status__gt=0).order_by('-create_time')[:6]
+
+  data = []
+  for course in course_list:
+    course_dict = model_to_dict(course)
+    course_dict['author'] = course.author.username
+    # 添加分类名称
+    category_name = CourseCategory.objects.filter(id=course.category_id).values()
+    course_dict['category'] = category_name[0]['name']
+    data.append(course_dict)
+
+  return ResponseInfo.success('获取首页推荐课程成功', data)
+
+
+# 搜索课程
+@get_only
+def search_course(request):
+  keyword = request.GET.get('keyword')
+
+  if not keyword:
+    return ResponseInfo.fail(400, '参数不全')
+
+  course_list = Course.objects.filter(name__contains=keyword, status__gt=0).order_by('-create_time').values()
+
+  # 添加分类名称
+  for course in course_list:
+    category_name = CourseCategory.objects.filter(id=course['category_id']).values()
+    course['category'] = category_name[0]['name']
+
+  course_list = [
+    model_to_dict(course) for course in course_list
+  ]
+
+  return ResponseInfo.success('搜索成功', data=course_list)

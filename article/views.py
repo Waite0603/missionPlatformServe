@@ -1,6 +1,7 @@
 import json
 
 from django.core.paginator import Paginator
+from django.http import FileResponse
 
 from article.models import Article
 from missionPlatform.decorators import post_only, login_required, get_only
@@ -192,3 +193,50 @@ def recommend_article(request):
     data.append(article_dict)
 
   return ResponseInfo.success('获取推荐文章成功', data[:3])
+
+
+# 获取文章封面
+@get_only
+def get_article_cover(request, cover_name):
+  cover_path = 'upload/article_cover/'
+
+  print(cover_path)
+
+  try:
+    return FileResponse(open(f'{cover_path}/{cover_name}', 'rb'))
+  except Exception as e:
+    print(e)
+    return ResponseInfo.fail(404, '文件不存在')
+
+
+# 首页推荐文章
+@get_only
+def index_recommend_article(request):
+  article_list = Article.objects.all().order_by('-create_time')[:5]
+
+  data = []
+  for article in article_list:
+    article_dict = model_to_dict(article)
+    article_dict['author'] = article.author.username
+    data.append(article_dict)
+
+  return ResponseInfo.success('获取首页推荐文章成功', data[:4])
+
+
+# 搜索文章
+@get_only
+def search_article(request):
+  keyword = request.GET.get('keyword')
+
+  if not keyword:
+    return ResponseInfo.fail(400, '参数不全')
+
+  article_list = Article.objects.filter(title__contains=keyword).order_by('-create_time')
+
+  data = []
+  for article in article_list:
+    article_dict = model_to_dict(article)
+    article_dict['author'] = article.author.username
+    data.append(article_dict)
+
+  return ResponseInfo.success('搜索文章成功', data)

@@ -17,5 +17,8 @@ urlpatterns = [
   re_path(r'^get_list/?$', v.get_article_list, name='get_article_list'),
   re_path(r'^update/?$', v.update_article, name='update_article'),
   re_path(r'^delete/?$', v.delete_article, name='delete_article'),
-  re_path(r'^recommend/?$', v.recommend_article, name='recommend_article')
+  re_path(r'^recommend/?$', v.recommend_article, name='recommend_article'),
+  re_path(r'^cover/(?P<cover_name>[^/]+)$', v.get_article_cover, name='get_article_cover'),
+  re_path(r'^index/?$', v.index_recommend_article, name='index_recommend_article'),
+  re_path(r'^search/?$', v.search_article, name='search_article')
 ]

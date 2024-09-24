@@ -23,13 +23,14 @@ urlpatterns = [
   re_path(r'^update/?$', course.update_course, name='update_course'),
   re_path(r'^delete/?$', course.delete_course, name='delete_course'),
   re_path(r'^upload/cover/?$', course.upload_cover, name='upload_cover'),
-  re_path(r'^preview/cover/?$', course.preview_cover, name='get_cover'),
+  re_path(r'^cover/(?P<cover_url>.+)$', course.preview_cover, name='get_cover'),
   re_path(r'^recommend/?$', course.recommend_course, name='recommend_course'),
+  re_path(r'^index/?$', course.index_recommend_course, name='index_recommend_course'),
+  re_path(r'^search/?$', course.search_course, name='search_course'),
 
   re_path(r'^chapter/create/?$', chapter.create_chapter, name='create_chapter'),
   re_path(r'^chapter/list/?$', chapter.get_chapter_list, name='get_chapter_list'),
   re_path(r'^chapter/update/?$', chapter.update_chapter, name='update_chapter'),
   re_path(r'^chapter/delete/?$', chapter.delete_chapter, name='delete_chapter'),
-
 
 ]
