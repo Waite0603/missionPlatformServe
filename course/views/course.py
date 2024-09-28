@@ -206,7 +206,7 @@ def preview_cover(request, cover_url):
 # 推荐课程
 @get_only
 def recommend_course(request):
-  id = request.GET.get('id')
+  id = int(request.GET.get('id'))
 
   if not id:
     return ResponseInfo.fail(400, '参数不全')
@@ -220,12 +220,13 @@ def recommend_course(request):
   category = course_data.category
 
   # 获取推荐课程, 前四条, status!=0
-  recommend_course_list = Course.objects.filter(category=category).exclude(id=id, status=0).order_by('-create_time')[:4]
+  recommend_course_list = Course.objects.filter(category=category, status__gt=0).exclude(id=id).order_by('-create_time')[:4]
 
   recommend_course_list = [
     model_to_dict(course) for course in recommend_course_list
   ]
 
+  print(recommend_course_list)
   # 添加分类名称
   for course in recommend_course_list:
     category_name = CourseCategory.objects.filter(id=course['category_id']).values()

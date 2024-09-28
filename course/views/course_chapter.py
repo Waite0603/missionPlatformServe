@@ -38,12 +38,12 @@ def create_chapter(request):
     return ResponseInfo.fail(400, '参数不全')
 
   # 查看课程是否存在
-  course_data = Course.objects.filter(id=course_id, status=1).first()
+  course_data = Course.objects.filter(id=course_id, status__gt=0).first()
   if not course_data:
     return ResponseInfo.fail(404, '课程不存在')
 
   # 查看章节是否存在
-  chapter_data = Chapter.objects.filter(name=name, course=course_data, status=1).first()
+  chapter_data = Chapter.objects.filter(name=name, course=course_data, status__gt=0).first()
 
   if chapter_data:
     return ResponseInfo.fail(400, '章节已存在')
@@ -57,7 +57,7 @@ def create_chapter(request):
   )
 
   # 返回所有章节
-  chapter_list = Chapter.objects.filter(course=course_data, status=1).order_by('create_time').values()
+  chapter_list = Chapter.objects.filter(course=course_data, status__gt=0).order_by('create_time').values()
 
   chapter_list = [
     model_to_dict(chapter) for chapter in chapter_list
@@ -72,18 +72,18 @@ def get_chapter_list(request):
   if not course_id:
     return ResponseInfo.fail(400, '参数不全')
 
-  course_data = Course.objects.filter(id=course_id, status=1).first()
+  course_data = Course.objects.filter(id=course_id, status__gt=0).first()
   if not course_data:
     return ResponseInfo.fail(404, '课程不存在')
 
-  chapter_list = Chapter.objects.filter(course=course_data, status=1).order_by('create_time').values()
+  chapter_list = Chapter.objects.filter(course=course_data, status__gt=0).order_by('create_time').values()
 
   chapter_list = [
     model_to_dict(chapter) for chapter in chapter_list
   ]
 
   # 获取课程详情
-  course = Course.objects.filter(id=course_id, status=1).values()
+  course = Course.objects.filter(id=course_id, status__gt=0).values()
   course = model_to_dict(course[0])
 
   # 返回分类名称
@@ -112,7 +112,7 @@ def update_chapter(request):
     return ResponseInfo.fail(400, '参数不全')
 
   # 查看章节是否存在
-  chapter_data = Chapter.objects.filter(id=chapter_id, status=1).first()
+  chapter_data = Chapter.objects.filter(id=chapter_id, status__gt=0).first()
   if not chapter_data:
     return ResponseInfo.fail(404, '章节不存在')
 
@@ -122,7 +122,7 @@ def update_chapter(request):
   chapter_data.save()
 
   # 返回所有章节
-  chapter_list = Chapter.objects.filter(course=chapter_id, status=1).order_by('create_time').values()
+  chapter_list = Chapter.objects.filter(course=chapter_id, status__gt=0).order_by('create_time').values()
 
   chapter_list = [
     model_to_dict(chapter) for chapter in chapter_list
@@ -140,7 +140,7 @@ def delete_chapter(request):
     return ResponseInfo.fail(400, '参数不全')
 
   # 查看章节是否存在
-  chapter_data = Chapter.objects.filter(id=chapter_id, status=1).first()
+  chapter_data = Chapter.objects.filter(id=chapter_id, status__gt=0).first()
   if not chapter_data:
     return ResponseInfo.fail(404, '章节不存在')
 
@@ -149,7 +149,7 @@ def delete_chapter(request):
   chapter_data.save()
 
   # 返回所有章节
-  chapter_list = Chapter.objects.filter(course=chapter_data.course, status=1).order_by('create_time').values()
+  chapter_list = Chapter.objects.filter(course=chapter_data.course, status__gt=0).order_by('create_time').values()
 
   chapter_list = [
     model_to_dict(chapter) for chapter in chapter_list
