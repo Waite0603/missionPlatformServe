@@ -1,4 +1,7 @@
+import hashlib
 import json
+import random
+import time
 
 from django.core.paginator import Paginator
 from django.http import FileResponse
@@ -156,6 +159,9 @@ def get_article_list(request):
 @post_only
 @login_required
 def delete_article(request):
+  print(request.body)
+  # Content-Type
+  print(request.content_type)
   try:
     data = json.loads(request.body)
   except json.JSONDecodeError:
@@ -193,6 +199,31 @@ def recommend_article(request):
     data.append(article_dict)
 
   return ResponseInfo.success('获取推荐文章成功', data[:3])
+
+
+# 上传文章封面
+@post_only
+@login_required
+def upload_article_cover(request):
+  user = get_user_info(request)
+
+  cover = request.FILES.get('file')
+  print(request.FILES)
+
+  if not cover:
+    return ResponseInfo.fail(400, '参数不全')
+
+  cover_path = 'upload/article_cover/'
+
+  # 重命名文件, md5 (文件名 + 时间戳 + 随机数16位 + 用户名)
+  cover.name = f'{hashlib.md5((cover.name + str(time.time()) + str(random.randint(10000000, 99999999)) + user.username).encode("utf-8")).hexdigest()}.' + \
+               cover.name.split('.')[-1]
+
+  with open(f'{cover_path}/{cover.name}', 'wb') as f:
+    for chunk in cover.chunks():
+      f.write(chunk)
+
+  return ResponseInfo.success('上传成功', {'cover': cover.name})
 
 
 # 获取文章封面

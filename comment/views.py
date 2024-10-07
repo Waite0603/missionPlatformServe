@@ -51,8 +51,6 @@ def create_comment(request):
     model_to_dict(comment) for comment in comment_data
   ]
 
-  print(comment_list)
-
   for comment_dict in comment_list:
     user = UserProfileModel.objects.filter(id=comment_dict['author_id']).first()
     comment_dict['author'] = user.username
